@@ -1,0 +1,24 @@
+{
+  "overview": "A modern appreciation gifting store where users can browse beautifully presented gift sets and bundles, view detailed product pages, manage a shopping cart, and complete secure purchases via Stripe checkout. Features a premium warm aesthetic with hero landing, product catalog, and order confirmation flow.",
+  "features": [
+    "Hero landing page with warm branding and CTA",
+    "Product catalog with search and sorting",
+    "Product detail pages with gallery and add-to-cart",
+    "Shopping cart drawer with quantity management",
+    "Stripe-powered secure checkout",
+    "Order confirmation page",
+    "Responsive premium design with warm color palette",
+    "Sample appreciation gift products and bundles"
+  ],
+  "category": "e-commerce",
+  "tags": [
+    "gifting",
+    "appreciation",
+    "e-commerce",
+    "stripe",
+    "shopping-cart",
+    "product-catalog",
+    "checkout"
+  ],
+  "last_updated": "2026-04-13T09:14:27.465Z"
+}

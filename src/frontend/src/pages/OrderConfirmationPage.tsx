@@ -1,0 +1,77 @@
+import { Button } from "@/components/ui/button";
+import { Link } from "@tanstack/react-router";
+import { ArrowRight, CheckCircle, Gift } from "lucide-react";
+import { motion } from "motion/react";
+import { useEffect } from "react";
+import { useCartStore } from "../store/cart";
+
+export default function OrderConfirmationPage() {
+  const clearCart = useCartStore((s) => s.clearCart);
+
+  useEffect(() => {
+    clearCart();
+  }, [clearCart]);
+
+  return (
+    <div className="container mx-auto px-4 py-24 flex flex-col items-center text-center gap-8">
+      <motion.div
+        initial={{ scale: 0.7, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 200, damping: 20 }}
+        className="h-24 w-24 rounded-full bg-accent/10 border-2 border-accent/20 flex items-center justify-center"
+      >
+        <CheckCircle className="h-12 w-12 text-accent" />
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="flex flex-col gap-4 max-w-md"
+      >
+        <h1 className="font-display text-4xl font-semibold text-foreground tracking-tight">
+          Your gift is on its way!
+        </h1>
+        <p className="text-muted-foreground font-body text-base leading-relaxed">
+          Thank you for your order. We're carefully packaging your selections
+          and will send you a shipping confirmation shortly.
+        </p>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.35 }}
+        className="bg-card border border-border rounded-xl p-6 flex flex-col gap-3 max-w-sm w-full"
+      >
+        <div className="flex items-center gap-3">
+          <Gift className="h-5 w-5 text-accent shrink-0" />
+          <p className="text-sm font-body font-medium text-foreground">
+            Handcrafted packaging with personal touch
+          </p>
+        </div>
+        <p className="text-xs text-muted-foreground font-body">
+          Estimated delivery: 3–5 business days. You'll receive a tracking
+          number via email.
+        </p>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.5 }}
+        className="flex flex-col sm:flex-row gap-4"
+      >
+        <Button
+          size="lg"
+          className="bg-accent hover:bg-accent/90 text-accent-foreground font-body font-semibold transition-smooth"
+          asChild
+        >
+          <Link to="/">
+            Continue Shopping <ArrowRight className="ml-2 h-4 w-4" />
+          </Link>
+        </Button>
+      </motion.div>
+    </div>
+  );
+}

@@ -1,8 +1,9 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link, useRouter } from "@tanstack/react-router";
-import { Menu, ShoppingBag, X } from "lucide-react";
+import { LogIn, LogOut, Menu, ShoppingBag, User, X } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "../hooks/use-auth";
 import { useCartStore } from "../store/cart";
 
 const NAV_LINKS = [
@@ -15,6 +16,14 @@ export function Header() {
   const itemCount = useCartStore((s) => s.itemCount());
   const [mobileOpen, setMobileOpen] = useState(false);
   const router = useRouter();
+  const {
+    isAuthenticated,
+    isInitializing,
+    isLoggingIn,
+    shortPrincipal,
+    login,
+    logout,
+  } = useAuth();
 
   function handleOccasionLink(
     e: React.MouseEvent<HTMLAnchorElement>,
@@ -67,8 +76,54 @@ export function Header() {
           ))}
         </nav>
 
-        {/* Cart + Mobile Toggle */}
-        <div className="flex items-center gap-3">
+        {/* Auth + Cart + Mobile Toggle */}
+        <div className="flex items-center gap-2">
+          {/* Auth buttons — desktop */}
+          {!isInitializing && (
+            <div className="hidden md:flex items-center gap-2">
+              {isAuthenticated ? (
+                <>
+                  <Link to="/account" data-ocid="header-account-link">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="flex items-center gap-1.5 text-sm font-medium hover:bg-accent/10 hover:text-accent transition-smooth"
+                    >
+                      <User className="h-4 w-4" />
+                      <span className="max-w-[80px] truncate">
+                        {shortPrincipal}
+                      </span>
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={logout}
+                    className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-smooth"
+                    data-ocid="header-logout-btn"
+                    aria-label="Log out"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>Log out</span>
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={login}
+                  disabled={isLoggingIn}
+                  className="flex items-center gap-1.5 border-accent/40 text-accent hover:bg-accent hover:text-accent-foreground transition-smooth"
+                  data-ocid="header-login-btn"
+                >
+                  <LogIn className="h-4 w-4" />
+                  <span>{isLoggingIn ? "Signing in…" : "Sign in"}</span>
+                </Button>
+              )}
+            </div>
+          )}
+
+          {/* Cart */}
           <Link
             to="/checkout"
             className="relative"
@@ -91,6 +146,8 @@ export function Header() {
               )}
             </Button>
           </Link>
+
+          {/* Mobile menu toggle */}
           <Button
             variant="ghost"
             size="icon"
@@ -128,6 +185,56 @@ export function Header() {
               {link.label}
             </a>
           ))}
+
+          {/* Mobile auth */}
+          {!isInitializing && (
+            <div className="pt-3 flex flex-col gap-2">
+              {isAuthenticated ? (
+                <>
+                  <Link
+                    to="/account"
+                    onClick={() => setMobileOpen(false)}
+                    data-ocid="header-mobile-account-link"
+                  >
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start gap-2 text-foreground hover:text-accent"
+                    >
+                      <User className="h-4 w-4" />
+                      My Account
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      logout();
+                      setMobileOpen(false);
+                    }}
+                    className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground"
+                    data-ocid="header-mobile-logout-btn"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Log out
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  onClick={() => {
+                    login();
+                    setMobileOpen(false);
+                  }}
+                  disabled={isLoggingIn}
+                  className="w-full bg-accent text-accent-foreground hover:bg-accent/90"
+                  data-ocid="header-mobile-login-btn"
+                >
+                  <LogIn className="h-4 w-4 mr-2" />
+                  {isLoggingIn
+                    ? "Signing in…"
+                    : "Sign in with Internet Identity"}
+                </Button>
+              )}
+            </div>
+          )}
         </nav>
       )}
     </header>

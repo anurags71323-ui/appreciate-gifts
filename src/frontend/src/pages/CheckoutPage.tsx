@@ -17,7 +17,11 @@ import { createActor } from "../backend";
 import { useCartStore } from "../store/cart";
 
 function formatPrice(cents: number) {
-  return `$${(cents / 100).toFixed(2)}`;
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  }).format(cents / 100);
 }
 
 type CheckoutSession = { id: string; url: string };

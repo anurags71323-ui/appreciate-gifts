@@ -1,10 +1,18 @@
 // Version: 1.0.0
+type AddressId__773061391 = Text;
 type Data__791452850<K, V> =
   {var count : Nat__490723111; kvs : [var ?(K, V)]};
 type Internal__8484328<K, V> =
   {children : [var ?Node__46230540<K, V>]; data : Data__791452850<K, V>};
 type Leaf__809889148<K, V> = {data : Data__791452850<K, V>};
 type LineItem__252519363 = {productId : ProductId__603204223; quantity : Nat};
+type List__415060402<T> = List__790383201<T>;
+type List__790383201<T> =
+  {
+    var blockIndex : Nat__490723111;
+    var blocks : [var [var ?T]];
+    var elementIndex : Nat__490723111
+  };
 type Nat__490723111 = Nat__920180692;
 type Nat__920180692 = Nat;
 type Node__46230540<K, V> =
@@ -17,8 +25,10 @@ type Order__516101800 =
     items : [LineItem__252519363];
     status : OrderStatus__340549605;
     timestamp : Timestamp__718767551;
-    total : Nat
+    total : Nat;
+    userId : ?Principal
   };
+type ProductId__23936853 = ProductId__603204223;
 type ProductId__603204223 = Text;
 type Product__129602263 =
   {
@@ -30,10 +40,24 @@ type Product__129602263 =
     price : Nat;
     tags : [Text]
   };
+type ShippingAddress__531062794 =
+  {
+    city : Text;
+    country : Text;
+    fullName : Text;
+    id : AddressId__773061391;
+    isDefault : Bool;
+    postalCode : Text;
+    state : Text;
+    streetAddress : Text
+  };
 type StripeConfiguration__96897619 =
   {allowedCountries : [Text]; secretKey : Text};
 type Timestamp__718767551 = Int;
+type WishlistEntry__654029851 =
+  {addedAt : Int; productId : ProductId__23936853};
 actor {
+  stable addressCounterState : {var value : Nat};
   stable var nextOrderId : Nat;
   stable orders :
     {
@@ -46,5 +70,17 @@ actor {
       var size : Nat__490723111
     };
   stable var seeded : Bool;
-  stable var stripeConfig : ?StripeConfiguration__96897619
+  stable var stripeConfig : ?StripeConfiguration__96897619;
+  stable userAddresses :
+    {
+      var root :
+        Node__46230540<Principal, List__415060402<ShippingAddress__531062794>>;
+      var size : Nat__490723111
+    };
+  stable wishlists :
+    {
+      var root :
+        Node__46230540<Principal, List__415060402<WishlistEntry__654029851>>;
+      var size : Nat__490723111
+    }
 };

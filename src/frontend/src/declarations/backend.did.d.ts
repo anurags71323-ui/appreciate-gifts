@@ -10,7 +10,20 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export type AddressId = string;
 export interface LineItem { 'productId' : ProductId, 'quantity' : bigint }
+export interface Order {
+  'id' : OrderId,
+  'status' : OrderStatus,
+  'total' : bigint,
+  'userId' : [] | [Principal],
+  'timestamp' : Timestamp,
+  'items' : Array<LineItem>,
+}
+export type OrderId = string;
+export type OrderStatus = { 'cancelled' : null } |
+  { 'pending' : null } |
+  { 'completed' : null };
 export interface Product {
   'id' : ProductId,
   'featured' : boolean,
@@ -21,6 +34,24 @@ export interface Product {
   'price' : bigint,
 }
 export type ProductId = string;
+export interface ShippingAddress {
+  'id' : AddressId,
+  'country' : string,
+  'city' : string,
+  'postalCode' : string,
+  'fullName' : string,
+  'state' : string,
+  'isDefault' : boolean,
+  'streetAddress' : string,
+}
+export interface ShippingAddressInput {
+  'country' : string,
+  'city' : string,
+  'postalCode' : string,
+  'fullName' : string,
+  'state' : string,
+  'streetAddress' : string,
+}
 export interface StripeConfiguration {
   'allowedCountries' : Array<string>,
   'secretKey' : string,
@@ -29,6 +60,7 @@ export type StripeSessionStatus = {
     'completed' : { 'userPrincipal' : [] | [string], 'response' : string }
   } |
   { 'failed' : { 'error' : string } };
+export type Timestamp = bigint;
 export interface TransformationInput {
   'context' : Uint8Array,
   'response' : http_request_result,
@@ -45,16 +77,46 @@ export interface http_request_result {
   'headers' : Array<http_header>,
 }
 export interface _SERVICE {
+  'addShippingAddress' : ActorMethod<
+    [ShippingAddressInput],
+    { 'ok' : ShippingAddress } |
+      { 'err' : string }
+  >,
+  'addToWishlist' : ActorMethod<[string], { 'ok' : null } | { 'err' : string }>,
   'createCheckoutSession' : ActorMethod<
     [Array<LineItem>, string, string],
     string
   >,
+  'deleteShippingAddress' : ActorMethod<
+    [string],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
   'getProduct' : ActorMethod<[ProductId], [] | [Product]>,
   'getProducts' : ActorMethod<[], Array<Product>>,
   'getStripeSessionStatus' : ActorMethod<[string], StripeSessionStatus>,
+  'getUserOrders' : ActorMethod<[], Array<Order>>,
+  'getUserShippingAddresses' : ActorMethod<[], Array<ShippingAddress>>,
+  'getUserWishlist' : ActorMethod<[], Array<Product>>,
+  'isProductInWishlist' : ActorMethod<[string], boolean>,
   'isStripeConfigured' : ActorMethod<[], boolean>,
+  'removeFromWishlist' : ActorMethod<
+    [string],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
+  'setDefaultShippingAddress' : ActorMethod<
+    [string],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
   'setStripeConfiguration' : ActorMethod<[StripeConfiguration], undefined>,
   'transform' : ActorMethod<[TransformationInput], TransformationOutput>,
+  'updateShippingAddress' : ActorMethod<
+    [string, ShippingAddressInput],
+    { 'ok' : ShippingAddress } |
+      { 'err' : string }
+  >,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

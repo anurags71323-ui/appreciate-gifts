@@ -8,6 +8,25 @@
 
 import { IDL } from '@icp-sdk/core/candid';
 
+export const ShippingAddressInput = IDL.Record({
+  'country' : IDL.Text,
+  'city' : IDL.Text,
+  'postalCode' : IDL.Text,
+  'fullName' : IDL.Text,
+  'state' : IDL.Text,
+  'streetAddress' : IDL.Text,
+});
+export const AddressId = IDL.Text;
+export const ShippingAddress = IDL.Record({
+  'id' : AddressId,
+  'country' : IDL.Text,
+  'city' : IDL.Text,
+  'postalCode' : IDL.Text,
+  'fullName' : IDL.Text,
+  'state' : IDL.Text,
+  'isDefault' : IDL.Bool,
+  'streetAddress' : IDL.Text,
+});
 export const ProductId = IDL.Text;
 export const LineItem = IDL.Record({
   'productId' : ProductId,
@@ -28,6 +47,21 @@ export const StripeSessionStatus = IDL.Variant({
     'response' : IDL.Text,
   }),
   'failed' : IDL.Record({ 'error' : IDL.Text }),
+});
+export const OrderId = IDL.Text;
+export const OrderStatus = IDL.Variant({
+  'cancelled' : IDL.Null,
+  'pending' : IDL.Null,
+  'completed' : IDL.Null,
+});
+export const Timestamp = IDL.Int;
+export const Order = IDL.Record({
+  'id' : OrderId,
+  'status' : OrderStatus,
+  'total' : IDL.Nat,
+  'userId' : IDL.Opt(IDL.Principal),
+  'timestamp' : Timestamp,
+  'items' : IDL.Vec(LineItem),
 });
 export const StripeConfiguration = IDL.Record({
   'allowedCountries' : IDL.Vec(IDL.Text),
@@ -53,26 +87,79 @@ export const TransformationOutput = IDL.Record({
 });
 
 export const idlService = IDL.Service({
+  'addShippingAddress' : IDL.Func(
+      [ShippingAddressInput],
+      [IDL.Variant({ 'ok' : ShippingAddress, 'err' : IDL.Text })],
+      [],
+    ),
+  'addToWishlist' : IDL.Func(
+      [IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
   'createCheckoutSession' : IDL.Func(
       [IDL.Vec(LineItem), IDL.Text, IDL.Text],
       [IDL.Text],
       [],
     ),
+  'deleteShippingAddress' : IDL.Func(
+      [IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
   'getProduct' : IDL.Func([ProductId], [IDL.Opt(Product)], ['query']),
   'getProducts' : IDL.Func([], [IDL.Vec(Product)], ['query']),
   'getStripeSessionStatus' : IDL.Func([IDL.Text], [StripeSessionStatus], []),
+  'getUserOrders' : IDL.Func([], [IDL.Vec(Order)], ['query']),
+  'getUserShippingAddresses' : IDL.Func([], [IDL.Vec(ShippingAddress)], []),
+  'getUserWishlist' : IDL.Func([], [IDL.Vec(Product)], []),
+  'isProductInWishlist' : IDL.Func([IDL.Text], [IDL.Bool], []),
   'isStripeConfigured' : IDL.Func([], [IDL.Bool], ['query']),
+  'removeFromWishlist' : IDL.Func(
+      [IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
+  'setDefaultShippingAddress' : IDL.Func(
+      [IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
   'setStripeConfiguration' : IDL.Func([StripeConfiguration], [], []),
   'transform' : IDL.Func(
       [TransformationInput],
       [TransformationOutput],
       ['query'],
     ),
+  'updateShippingAddress' : IDL.Func(
+      [IDL.Text, ShippingAddressInput],
+      [IDL.Variant({ 'ok' : ShippingAddress, 'err' : IDL.Text })],
+      [],
+    ),
 });
 
 export const idlInitArgs = [];
 
 export const idlFactory = ({ IDL }) => {
+  const ShippingAddressInput = IDL.Record({
+    'country' : IDL.Text,
+    'city' : IDL.Text,
+    'postalCode' : IDL.Text,
+    'fullName' : IDL.Text,
+    'state' : IDL.Text,
+    'streetAddress' : IDL.Text,
+  });
+  const AddressId = IDL.Text;
+  const ShippingAddress = IDL.Record({
+    'id' : AddressId,
+    'country' : IDL.Text,
+    'city' : IDL.Text,
+    'postalCode' : IDL.Text,
+    'fullName' : IDL.Text,
+    'state' : IDL.Text,
+    'isDefault' : IDL.Bool,
+    'streetAddress' : IDL.Text,
+  });
   const ProductId = IDL.Text;
   const LineItem = IDL.Record({
     'productId' : ProductId,
@@ -93,6 +180,21 @@ export const idlFactory = ({ IDL }) => {
       'response' : IDL.Text,
     }),
     'failed' : IDL.Record({ 'error' : IDL.Text }),
+  });
+  const OrderId = IDL.Text;
+  const OrderStatus = IDL.Variant({
+    'cancelled' : IDL.Null,
+    'pending' : IDL.Null,
+    'completed' : IDL.Null,
+  });
+  const Timestamp = IDL.Int;
+  const Order = IDL.Record({
+    'id' : OrderId,
+    'status' : OrderStatus,
+    'total' : IDL.Nat,
+    'userId' : IDL.Opt(IDL.Principal),
+    'timestamp' : Timestamp,
+    'items' : IDL.Vec(LineItem),
   });
   const StripeConfiguration = IDL.Record({
     'allowedCountries' : IDL.Vec(IDL.Text),
@@ -115,20 +217,54 @@ export const idlFactory = ({ IDL }) => {
   });
   
   return IDL.Service({
+    'addShippingAddress' : IDL.Func(
+        [ShippingAddressInput],
+        [IDL.Variant({ 'ok' : ShippingAddress, 'err' : IDL.Text })],
+        [],
+      ),
+    'addToWishlist' : IDL.Func(
+        [IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
     'createCheckoutSession' : IDL.Func(
         [IDL.Vec(LineItem), IDL.Text, IDL.Text],
         [IDL.Text],
         [],
       ),
+    'deleteShippingAddress' : IDL.Func(
+        [IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
     'getProduct' : IDL.Func([ProductId], [IDL.Opt(Product)], ['query']),
     'getProducts' : IDL.Func([], [IDL.Vec(Product)], ['query']),
     'getStripeSessionStatus' : IDL.Func([IDL.Text], [StripeSessionStatus], []),
+    'getUserOrders' : IDL.Func([], [IDL.Vec(Order)], ['query']),
+    'getUserShippingAddresses' : IDL.Func([], [IDL.Vec(ShippingAddress)], []),
+    'getUserWishlist' : IDL.Func([], [IDL.Vec(Product)], []),
+    'isProductInWishlist' : IDL.Func([IDL.Text], [IDL.Bool], []),
     'isStripeConfigured' : IDL.Func([], [IDL.Bool], ['query']),
+    'removeFromWishlist' : IDL.Func(
+        [IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
+    'setDefaultShippingAddress' : IDL.Func(
+        [IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
     'setStripeConfiguration' : IDL.Func([StripeConfiguration], [], []),
     'transform' : IDL.Func(
         [TransformationInput],
         [TransformationOutput],
         ['query'],
+      ),
+    'updateShippingAddress' : IDL.Func(
+        [IDL.Text, ShippingAddressInput],
+        [IDL.Variant({ 'ok' : ShippingAddress, 'err' : IDL.Text })],
+        [],
       ),
   });
 };

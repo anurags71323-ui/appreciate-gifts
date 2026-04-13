@@ -30,5 +30,6 @@ module {
     total : Nat; // in cents
     timestamp : Timestamp;
     status : OrderStatus;
+    userId : ?Principal; // linked to authenticated user, null for anonymous
   };
 };

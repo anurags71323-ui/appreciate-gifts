@@ -34,3 +34,21 @@ export type OccasionCategory = {
   imageUrl: string;
   slug: string;
 };
+
+export interface ShippingAddress {
+  id: string;
+  label: string; // e.g. "Home", "Office"
+  fullName: string;
+  line1: string;
+  line2?: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  isDefault: boolean;
+}
+
+export interface WishlistEntry {
+  productId: string;
+  addedAt: number; // timestamp in ms
+}

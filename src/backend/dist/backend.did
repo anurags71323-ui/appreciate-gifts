@@ -20,6 +20,7 @@ type TransformationInput =
    context: blob;
    response: http_request_result;
  };
+type Timestamp = int;
 type StripeSessionStatus = 
  variant {
    completed: record {
@@ -33,6 +34,26 @@ type StripeConfiguration =
    allowedCountries: vec text;
    secretKey: text;
  };
+type ShippingAddressInput = 
+ record {
+   city: text;
+   country: text;
+   fullName: text;
+   postalCode: text;
+   state: text;
+   streetAddress: text;
+ };
+type ShippingAddress = 
+ record {
+   city: text;
+   country: text;
+   fullName: text;
+   id: AddressId;
+   isDefault: bool;
+   postalCode: text;
+   state: text;
+   streetAddress: text;
+ };
 type ProductId = text;
 type Product = 
  record {
@@ -44,18 +65,65 @@ type Product =
    price: nat;
    tags: vec text;
  };
+type OrderStatus = 
+ variant {
+   cancelled;
+   completed;
+   pending;
+ };
+type OrderId = text;
+type Order = 
+ record {
+   id: OrderId;
+   items: vec LineItem;
+   status: OrderStatus;
+   timestamp: Timestamp;
+   total: nat;
+   userId: opt principal;
+ };
 type LineItem = 
  record {
    productId: ProductId;
    quantity: nat;
  };
+type AddressId = text;
 service : {
+  addShippingAddress: (input: ShippingAddressInput) ->
+   (variant {
+      err: text;
+      ok: ShippingAddress;
+    });
+  addToWishlist: (productId: text) -> (variant {
+                                         err: text;
+                                         ok;
+                                       });
   createCheckoutSession: (items: vec LineItem, successUrl: text, cancelUrl:
    text) -> (text);
+  deleteShippingAddress: (id: text) -> (variant {
+                                          err: text;
+                                          ok;
+                                        });
   getProduct: (id: ProductId) -> (opt Product) query;
   getProducts: () -> (vec Product) query;
   getStripeSessionStatus: (sessionId: text) -> (StripeSessionStatus);
+  getUserOrders: () -> (vec Order) query;
+  getUserShippingAddresses: () -> (vec ShippingAddress);
+  getUserWishlist: () -> (vec Product);
+  isProductInWishlist: (productId: text) -> (bool);
   isStripeConfigured: () -> (bool) query;
+  removeFromWishlist: (productId: text) -> (variant {
+                                              err: text;
+                                              ok;
+                                            });
+  setDefaultShippingAddress: (id: text) -> (variant {
+                                              err: text;
+                                              ok;
+                                            });
   setStripeConfiguration: (config: StripeConfiguration) -> ();
   transform: (input: TransformationInput) -> (TransformationOutput) query;
+  updateShippingAddress: (id: text, input: ShippingAddressInput) ->
+   (variant {
+      err: text;
+      ok: ShippingAddress;
+    });
 }

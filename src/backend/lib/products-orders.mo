@@ -4,6 +4,7 @@ import List "mo:core/List";
 import Time "mo:core/Time";
 import Runtime "mo:core/Runtime";
 import Nat "mo:core/Nat";
+import Principal "mo:core/Principal";
 
 module {
   /// Returns all products as an array.
@@ -140,6 +141,7 @@ module {
     products : Map.Map<Types.ProductId, Types.Product>,
     nextOrderId : Nat,
     items : [Types.LineItem],
+    userId : ?Principal,
   ) : (Types.Order, Nat) {
     let orderId = "order-" # nextOrderId.toText();
     var total : Nat = 0;
@@ -157,6 +159,7 @@ module {
       total = total;
       timestamp = Time.now();
       status = #pending;
+      userId = userId;
     };
     orders.add(orderId, order);
     (order, nextOrderId + 1);
@@ -165,6 +168,16 @@ module {
   /// Returns a single order by id.
   public func getOrder(orders : Map.Map<Types.OrderId, Types.Order>, id : Types.OrderId) : ?Types.Order {
     orders.get(id);
+  };
+
+  /// Returns all orders belonging to the given user Principal.
+  public func getUserOrders(orders : Map.Map<Types.OrderId, Types.Order>, userId : Principal) : [Types.Order] {
+    orders.values().filter(func(order) {
+      switch (order.userId) {
+        case (?uid) { Principal.equal(uid, userId) };
+        case null { false };
+      };
+    }).toArray();
   };
 
   /// Builds Stripe-compatible shopping items from line items and product catalog.

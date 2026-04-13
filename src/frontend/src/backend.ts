@@ -89,15 +89,7 @@ export class ExternalBlob {
         return this;
     }
 }
-export interface Product {
-    id: ProductId;
-    featured: boolean;
-    name: string;
-    tags: Array<string>;
-    description: string;
-    imageUrl: string;
-    price: bigint;
-}
+export type Timestamp = bigint;
 export interface TransformationOutput {
     status: bigint;
     body: Uint8Array;
@@ -107,6 +99,42 @@ export interface LineItem {
     productId: ProductId;
     quantity: bigint;
 }
+export interface ShippingAddress {
+    id: AddressId;
+    country: string;
+    city: string;
+    postalCode: string;
+    fullName: string;
+    state: string;
+    isDefault: boolean;
+    streetAddress: string;
+}
+export interface ShippingAddressInput {
+    country: string;
+    city: string;
+    postalCode: string;
+    fullName: string;
+    state: string;
+    streetAddress: string;
+}
+export interface Order {
+    id: OrderId;
+    status: OrderStatus;
+    total: bigint;
+    userId?: Principal;
+    timestamp: Timestamp;
+    items: Array<LineItem>;
+}
+export interface http_header {
+    value: string;
+    name: string;
+}
+export interface http_request_result {
+    status: bigint;
+    body: Uint8Array;
+    headers: Array<http_header>;
+}
+export type AddressId = string;
 export interface TransformationInput {
     context: Uint8Array;
     response: http_request_result;
@@ -128,27 +156,119 @@ export interface StripeConfiguration {
     secretKey: string;
 }
 export type ProductId = string;
-export interface http_header {
-    value: string;
+export interface Product {
+    id: ProductId;
+    featured: boolean;
     name: string;
+    tags: Array<string>;
+    description: string;
+    imageUrl: string;
+    price: bigint;
 }
-export interface http_request_result {
-    status: bigint;
-    body: Uint8Array;
-    headers: Array<http_header>;
+export type OrderId = string;
+export enum OrderStatus {
+    cancelled = "cancelled",
+    pending = "pending",
+    completed = "completed"
 }
 export interface backendInterface {
+    addShippingAddress(input: ShippingAddressInput): Promise<{
+        __kind__: "ok";
+        ok: ShippingAddress;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    addToWishlist(productId: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     createCheckoutSession(items: Array<LineItem>, successUrl: string, cancelUrl: string): Promise<string>;
+    deleteShippingAddress(id: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     getProduct(id: ProductId): Promise<Product | null>;
     getProducts(): Promise<Array<Product>>;
     getStripeSessionStatus(sessionId: string): Promise<StripeSessionStatus>;
+    getUserOrders(): Promise<Array<Order>>;
+    getUserShippingAddresses(): Promise<Array<ShippingAddress>>;
+    getUserWishlist(): Promise<Array<Product>>;
+    isProductInWishlist(productId: string): Promise<boolean>;
     isStripeConfigured(): Promise<boolean>;
+    removeFromWishlist(productId: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    setDefaultShippingAddress(id: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     setStripeConfiguration(config: StripeConfiguration): Promise<void>;
     transform(input: TransformationInput): Promise<TransformationOutput>;
+    updateShippingAddress(id: string, input: ShippingAddressInput): Promise<{
+        __kind__: "ok";
+        ok: ShippingAddress;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
 }
-import type { Product as _Product, StripeSessionStatus as _StripeSessionStatus } from "./declarations/backend.did.d.ts";
+import type { LineItem as _LineItem, Order as _Order, OrderId as _OrderId, OrderStatus as _OrderStatus, Product as _Product, ShippingAddress as _ShippingAddress, StripeSessionStatus as _StripeSessionStatus, Timestamp as _Timestamp } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
+    async addShippingAddress(arg0: ShippingAddressInput): Promise<{
+        __kind__: "ok";
+        ok: ShippingAddress;
+    } | {
+        __kind__: "err";
+        err: string;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.addShippingAddress(arg0);
+                return from_candid_variant_n1(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.addShippingAddress(arg0);
+            return from_candid_variant_n1(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async addToWishlist(arg0: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.addToWishlist(arg0);
+                return from_candid_variant_n2(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.addToWishlist(arg0);
+            return from_candid_variant_n2(this._uploadFile, this._downloadFile, result);
+        }
+    }
     async createCheckoutSession(arg0: Array<LineItem>, arg1: string, arg2: string): Promise<string> {
         if (this.processError) {
             try {
@@ -163,18 +283,38 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async deleteShippingAddress(arg0: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.deleteShippingAddress(arg0);
+                return from_candid_variant_n2(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.deleteShippingAddress(arg0);
+            return from_candid_variant_n2(this._uploadFile, this._downloadFile, result);
+        }
+    }
     async getProduct(arg0: ProductId): Promise<Product | null> {
         if (this.processError) {
             try {
                 const result = await this.actor.getProduct(arg0);
-                return from_candid_opt_n1(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n3(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getProduct(arg0);
-            return from_candid_opt_n1(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n3(this._uploadFile, this._downloadFile, result);
         }
     }
     async getProducts(): Promise<Array<Product>> {
@@ -195,14 +335,70 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getStripeSessionStatus(arg0);
-                return from_candid_StripeSessionStatus_n2(this._uploadFile, this._downloadFile, result);
+                return from_candid_StripeSessionStatus_n4(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getStripeSessionStatus(arg0);
-            return from_candid_StripeSessionStatus_n2(this._uploadFile, this._downloadFile, result);
+            return from_candid_StripeSessionStatus_n4(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getUserOrders(): Promise<Array<Order>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getUserOrders();
+                return from_candid_vec_n8(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getUserOrders();
+            return from_candid_vec_n8(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getUserShippingAddresses(): Promise<Array<ShippingAddress>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getUserShippingAddresses();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getUserShippingAddresses();
+            return result;
+        }
+    }
+    async getUserWishlist(): Promise<Array<Product>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getUserWishlist();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getUserWishlist();
+            return result;
+        }
+    }
+    async isProductInWishlist(arg0: string): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.isProductInWishlist(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.isProductInWishlist(arg0);
+            return result;
         }
     }
     async isStripeConfigured(): Promise<boolean> {
@@ -217,6 +413,46 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.isStripeConfigured();
             return result;
+        }
+    }
+    async removeFromWishlist(arg0: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.removeFromWishlist(arg0);
+                return from_candid_variant_n2(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.removeFromWishlist(arg0);
+            return from_candid_variant_n2(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async setDefaultShippingAddress(arg0: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.setDefaultShippingAddress(arg0);
+                return from_candid_variant_n2(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.setDefaultShippingAddress(arg0);
+            return from_candid_variant_n2(this._uploadFile, this._downloadFile, result);
         }
     }
     async setStripeConfiguration(arg0: StripeConfiguration): Promise<void> {
@@ -247,17 +483,70 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async updateShippingAddress(arg0: string, arg1: ShippingAddressInput): Promise<{
+        __kind__: "ok";
+        ok: ShippingAddress;
+    } | {
+        __kind__: "err";
+        err: string;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateShippingAddress(arg0, arg1);
+                return from_candid_variant_n1(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateShippingAddress(arg0, arg1);
+            return from_candid_variant_n1(this._uploadFile, this._downloadFile, result);
+        }
+    }
 }
-function from_candid_StripeSessionStatus_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _StripeSessionStatus): StripeSessionStatus {
-    return from_candid_variant_n3(_uploadFile, _downloadFile, value);
+function from_candid_OrderStatus_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _OrderStatus): OrderStatus {
+    return from_candid_variant_n12(_uploadFile, _downloadFile, value);
 }
-function from_candid_opt_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Product]): Product | null {
+function from_candid_Order_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Order): Order {
+    return from_candid_record_n10(_uploadFile, _downloadFile, value);
+}
+function from_candid_StripeSessionStatus_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _StripeSessionStatus): StripeSessionStatus {
+    return from_candid_variant_n5(_uploadFile, _downloadFile, value);
+}
+function from_candid_opt_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [Principal]): Principal | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [string]): string | null {
+function from_candid_opt_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Product]): Product | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_record_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_opt_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [string]): string | null {
+    return value.length === 0 ? null : value[0];
+}
+function from_candid_record_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    id: _OrderId;
+    status: _OrderStatus;
+    total: bigint;
+    userId: [] | [Principal];
+    timestamp: _Timestamp;
+    items: Array<_LineItem>;
+}): {
+    id: OrderId;
+    status: OrderStatus;
+    total: bigint;
+    userId?: Principal;
+    timestamp: Timestamp;
+    items: Array<LineItem>;
+} {
+    return {
+        id: value.id,
+        status: from_candid_OrderStatus_n11(_uploadFile, _downloadFile, value.status),
+        total: value.total,
+        userId: record_opt_to_undefined(from_candid_opt_n13(_uploadFile, _downloadFile, value.userId)),
+        timestamp: value.timestamp,
+        items: value.items
+    };
+}
+function from_candid_record_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     userPrincipal: [] | [string];
     response: string;
 }): {
@@ -265,11 +554,58 @@ function from_candid_record_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint
     response: string;
 } {
     return {
-        userPrincipal: record_opt_to_undefined(from_candid_opt_n5(_uploadFile, _downloadFile, value.userPrincipal)),
+        userPrincipal: record_opt_to_undefined(from_candid_opt_n7(_uploadFile, _downloadFile, value.userPrincipal)),
         response: value.response
     };
 }
-function from_candid_variant_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_variant_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    ok: _ShippingAddress;
+} | {
+    err: string;
+}): {
+    __kind__: "ok";
+    ok: ShippingAddress;
+} | {
+    __kind__: "err";
+    err: string;
+} {
+    return "ok" in value ? {
+        __kind__: "ok",
+        ok: value.ok
+    } : "err" in value ? {
+        __kind__: "err",
+        err: value.err
+    } : value;
+}
+function from_candid_variant_n12(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    cancelled: null;
+} | {
+    pending: null;
+} | {
+    completed: null;
+}): OrderStatus {
+    return "cancelled" in value ? OrderStatus.cancelled : "pending" in value ? OrderStatus.pending : "completed" in value ? OrderStatus.completed : value;
+}
+function from_candid_variant_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    ok: null;
+} | {
+    err: string;
+}): {
+    __kind__: "ok";
+    ok: null;
+} | {
+    __kind__: "err";
+    err: string;
+} {
+    return "ok" in value ? {
+        __kind__: "ok",
+        ok: value.ok
+    } : "err" in value ? {
+        __kind__: "err",
+        err: value.err
+    } : value;
+}
+function from_candid_variant_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     completed: {
         userPrincipal: [] | [string];
         response: string;
@@ -292,11 +628,14 @@ function from_candid_variant_n3(_uploadFile: (file: ExternalBlob) => Promise<Uin
 } {
     return "completed" in value ? {
         __kind__: "completed",
-        completed: from_candid_record_n4(_uploadFile, _downloadFile, value.completed)
+        completed: from_candid_record_n6(_uploadFile, _downloadFile, value.completed)
     } : "failed" in value ? {
         __kind__: "failed",
         failed: value.failed
     } : value;
+}
+function from_candid_vec_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_Order>): Array<Order> {
+    return value.map((x)=>from_candid_Order_n9(_uploadFile, _downloadFile, x));
 }
 export interface CreateActorOptions {
     agent?: Agent;

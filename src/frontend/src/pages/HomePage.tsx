@@ -2,10 +2,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, ShoppingCart, Star, Tag } from "lucide-react";
-import { motion } from "motion/react";
+import { ArrowRight, Heart, ShoppingCart, Star, Tag } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import { useState } from "react";
 import { toast } from "sonner";
+import { useAuth } from "../hooks/use-auth";
 import { useFeaturedProducts, useProducts } from "../hooks/use-products";
+import { useWishlist } from "../hooks/use-wishlist";
 import { useCartStore } from "../store/cart";
 import type { OccasionCategory, Product } from "../types";
 
@@ -33,7 +36,11 @@ const OCCASIONS: OccasionCategory[] = [
 ];
 
 function formatPrice(cents: number) {
-  return `$${(cents / 100).toFixed(0)}`;
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  }).format(cents / 100);
 }
 
 function ProductCardSkeleton() {
@@ -46,6 +53,87 @@ function ProductCardSkeleton() {
         <Skeleton className="h-4 w-2/3" />
         <Skeleton className="h-10 w-full mt-2" />
       </div>
+    </div>
+  );
+}
+
+function WishlistHeartButton({ product }: { product: Product }) {
+  const { isAuthenticated, login } = useAuth();
+  const { data: allProducts = [] } = useProducts();
+  const { isInWishlist, toggleWishlist, isLoading } = useWishlist(allProducts);
+  const [showLoginHint, setShowLoginHint] = useState(false);
+
+  const inWishlist = isInWishlist(product.id);
+
+  function handleClick(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!isAuthenticated) {
+      setShowLoginHint(true);
+      setTimeout(() => setShowLoginHint(false), 2500);
+      return;
+    }
+    toggleWishlist(product.id);
+    if (!inWishlist) {
+      toast.success("Saved to wishlist", {
+        description: product.name,
+        action: {
+          label: "View Wishlist",
+          onClick: () => window.location.assign("/wishlist"),
+        },
+      });
+    } else {
+      toast.success("Removed from wishlist");
+    }
+  }
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={handleClick}
+        disabled={isLoading}
+        aria-label={inWishlist ? "Remove from wishlist" : "Save to wishlist"}
+        className={`h-8 w-8 rounded-full flex items-center justify-center transition-smooth shadow-subtle border ${
+          inWishlist
+            ? "bg-accent/10 border-accent/40 text-accent hover:bg-accent/20"
+            : "bg-card border-border text-muted-foreground hover:border-accent/40 hover:text-accent"
+        } disabled:opacity-50 disabled:cursor-not-allowed`}
+        data-ocid={`wishlist-heart-${product.id}`}
+      >
+        <Heart
+          className={`h-4 w-4 transition-all duration-200 ${inWishlist ? "fill-accent stroke-accent scale-110" : "fill-transparent"}`}
+        />
+      </button>
+
+      <AnimatePresence>
+        {showLoginHint && (
+          <motion.div
+            initial={{ opacity: 0, y: 4, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 4, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+            className="absolute right-0 top-10 z-20 bg-card border border-border rounded-lg px-3 py-2 shadow-elevation w-max max-w-[180px]"
+          >
+            <p className="text-xs font-body text-foreground leading-snug mb-1.5">
+              Sign in to save favorites
+            </p>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                void login();
+              }}
+              className="text-xs font-body font-semibold text-accent hover:text-accent/80 transition-colors"
+            >
+              Sign in →
+            </button>
+            <div className="absolute -top-1.5 right-2.5 h-2.5 w-2.5 bg-card border-t border-l border-border rotate-45" />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -95,6 +183,14 @@ function ProductCard({ product }: { product: Product }) {
               <Star className="h-2.5 w-2.5 fill-current" /> Featured
             </span>
           )}
+          <div
+            className="absolute top-3 right-3"
+            onClick={(e) => e.preventDefault()}
+            onKeyDown={(e) => e.preventDefault()}
+            role="presentation"
+          >
+            <WishlistHeartButton product={product} />
+          </div>
         </div>
 
         <div className="p-5 flex flex-col gap-3 flex-1">

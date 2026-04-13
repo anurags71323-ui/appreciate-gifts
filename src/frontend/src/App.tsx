@@ -17,6 +17,8 @@ const OrderConfirmationPage = lazy(
 );
 const PaymentSuccessPage = lazy(() => import("./pages/PaymentSuccessPage"));
 const PaymentFailurePage = lazy(() => import("./pages/PaymentFailurePage"));
+const AccountPage = lazy(() => import("./pages/AccountPage"));
+const WishlistPage = lazy(() => import("./pages/WishlistPage"));
 
 function PageLoader() {
   return (
@@ -96,6 +98,26 @@ const paymentFailureRoute = createRoute({
   ),
 });
 
+const accountRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/account",
+  component: () => (
+    <Suspense fallback={<PageLoader />}>
+      <AccountPage />
+    </Suspense>
+  ),
+});
+
+const wishlistRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/wishlist",
+  component: () => (
+    <Suspense fallback={<PageLoader />}>
+      <WishlistPage />
+    </Suspense>
+  ),
+});
+
 const routeTree = rootRoute.addChildren([
   homeRoute,
   productDetailRoute,
@@ -103,6 +125,8 @@ const routeTree = rootRoute.addChildren([
   orderConfirmationRoute,
   paymentSuccessRoute,
   paymentFailureRoute,
+  accountRoute,
+  wishlistRoute,
 ]);
 
 const router = createRouter({ routeTree });

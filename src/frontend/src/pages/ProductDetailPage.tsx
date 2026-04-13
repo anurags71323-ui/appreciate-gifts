@@ -2,15 +2,32 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link, useParams } from "@tanstack/react-router";
-import { ArrowLeft, ChevronRight, ShoppingCart, Star, Tag } from "lucide-react";
+import {
+  ArrowLeft,
+  ChevronRight,
+  Heart,
+  ShoppingCart,
+  Star,
+  Tag,
+} from "lucide-react";
 import { motion } from "motion/react";
 import { toast } from "sonner";
-import { SAMPLE_PRODUCTS, useProduct } from "../hooks/use-products";
+import { useAuth } from "../hooks/use-auth";
+import {
+  SAMPLE_PRODUCTS,
+  useProduct,
+  useProducts,
+} from "../hooks/use-products";
+import { useWishlist } from "../hooks/use-wishlist";
 import { useCartStore } from "../store/cart";
 import type { Product } from "../types";
 
 function formatPrice(cents: number) {
-  return `$${(cents / 100).toFixed(0)}`;
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  }).format(cents / 100);
 }
 
 function RelatedCard({ product }: { product: Product }) {
@@ -58,6 +75,61 @@ function RelatedCard({ product }: { product: Product }) {
         </Button>
       </div>
     </Link>
+  );
+}
+
+function WishlistButton({
+  productId,
+  productName,
+}: { productId: string; productName: string }) {
+  const { isAuthenticated, login } = useAuth();
+  const { data: allProducts = [] } = useProducts();
+  const { isInWishlist, toggleWishlist, isLoading } = useWishlist(allProducts);
+
+  const saved = isInWishlist(productId);
+
+  function handleClick() {
+    if (!isAuthenticated) {
+      toast.info("Sign in to save to your wishlist", {
+        action: {
+          label: "Sign In",
+          onClick: () => void login(),
+        },
+      });
+      return;
+    }
+    toggleWishlist(productId);
+    if (!saved) {
+      toast.success("Saved to wishlist", {
+        description: productName,
+        action: {
+          label: "View Wishlist",
+          onClick: () => window.location.assign("/wishlist"),
+        },
+      });
+    } else {
+      toast.success("Removed from wishlist");
+    }
+  }
+
+  return (
+    <Button
+      variant="outline"
+      size="lg"
+      disabled={isLoading && isAuthenticated}
+      onClick={handleClick}
+      className={`w-full font-body transition-smooth border-2 ${
+        saved
+          ? "border-accent/60 bg-accent/5 text-accent hover:bg-accent/10"
+          : "border-border hover:border-accent/40 hover:text-accent"
+      }`}
+      data-ocid="product-wishlist-btn"
+    >
+      <Heart
+        className={`h-5 w-5 mr-2 transition-all duration-200 ${saved ? "fill-accent stroke-accent" : "fill-transparent"}`}
+      />
+      {saved ? "Saved to Wishlist" : "Save to Wishlist"}
+    </Button>
   );
 }
 
@@ -214,7 +286,7 @@ export default function ProductDetailPage() {
                   "Artisan hand-selected items",
                   "Premium gift packaging",
                   "Handwritten gift card option",
-                  "Free delivery on orders over $100",
+                  "Free delivery on orders over ₹8,000",
                 ].map((item) => (
                   <li
                     key={item}
@@ -236,6 +308,8 @@ export default function ProductDetailPage() {
               <ShoppingCart className="h-5 w-5 mr-2" /> Add to Cart —{" "}
               {formatPrice(product.price)}
             </Button>
+
+            <WishlistButton productId={product.id} productName={product.name} />
 
             <Button
               variant="outline"
